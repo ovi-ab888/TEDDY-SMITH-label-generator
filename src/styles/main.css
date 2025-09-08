@@ -1,1 +1,38 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+}
 
+#app {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.page {
+    width: 210mm;
+    height: 297mm;
+    margin: 10px auto;
+    border: 1px solid #ccc;
+    page-break-after: always;
+}
+
+.barcode-item {
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid #eee;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 10px 0;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
