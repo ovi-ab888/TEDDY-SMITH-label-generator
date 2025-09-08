@@ -3,14 +3,366 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode Generator</title>
+    <title>TEDGY-SMITH Label Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .form-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .preview-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        .label-preview {
+            width: 100%;
+            max-width: 400px;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .barcode {
+            height: 80px;
+            width: 100%;
+            background: #f9f9f9;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            letter-spacing: 8px;
+            font-size: 24px;
+        }
+        
+        .product-name {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .product-details {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+        
+        .components {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+        
+        .components h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .component-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .component-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            width: 180px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+        
+        .component-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .component-item i {
+            font-size: 24px;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div id="app">
-        <h1>Barcode Generator</h1>
-        <input type="file" id="fileInput" accept=".json">
-        <button id="generateBtn">Generate PDF</button>
-        <div id="preview"></div>
+    <div class="container">
+        <header>
+            <h1>TEDGY-SMITH Label Generator</h1>
+            <p class="subtitle">Generate professional product labels with barcodes</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="form-section">
+                <h2>Label Information</h2>
+                <div class="form-group">
+                    <label for="productName">Product Name</label>
+                    <input type="text" id="productName" placeholder="Enter product name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="productCode">Product Code</label>
+                    <input type="text" id="productCode" placeholder="Enter product code">
+                </div>
+                
+                <div class="form-group">
+                    <label for="price">Price ($)</label>
+                    <input type="number" id="price" placeholder="Enter price" step="0.01">
+                </div>
+                
+                <div class="form-group">
+                    <label for="manufactureDate">Manufacture Date</label>
+                    <input type="date" id="manufactureDate">
+                </div>
+                
+                <div class="form-group">
+                    <label for="expiryDate">Expiry Date</label>
+                    <input type="date" id="expiryDate">
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description (Optional)</label>
+                    <textarea id="description" rows="3" placeholder="Enter product description"></textarea>
+                </div>
+                
+                <button id="generateBtn">Generate Label</button>
+            </div>
+            
+            <div class="preview-section">
+                <h2>Label Preview</h2>
+                <div class="label-preview">
+                    <div class="company-name">TEDGY-SMITH</div>
+                    <div class="barcode">123456789</div>
+                    <div class="product-name">Sample Product</div>
+                    <div class="product-details">Code: SP-001</div>
+                    <div class="product-details">Price: $19.99</div>
+                    <div class="product-details">Mfg: 2023-09-01</div>
+                    <div class="product-details">Exp: 2024-09-01</div>
+                </div>
+                <button id="printBtn">Print Label</button>
+            </div>
+        </div>
+        
+        <div class="components">
+            <h2>Project Components</h2>
+            <div class="component-list">
+                <div class="component-item">
+                    <i class="fas fa-barcode"></i>
+                    <h3>BarcodeGenerator.js</h3>
+                    <p class="timestamp">Updated 2 minutes ago</p>
+                </div>
+                
+                <div class="component-item">
+                    <i class="fas fa-database"></i>
+                    <h3>sampleData.json</h3>
+                    <p class="timestamp">Updated 4 minutes ago</p>
+                </div>
+                
+                <div class="component-item">
+                    <i class="fas fa-paint-brush"></i>
+                    <h3>Matrices</h3>
+                    <p class="timestamp">Updated 5 minutes ago</p>
+                </div>
+                
+                <div class="component-item">
+                    <i class="fas fa-file-upload"></i>
+                    <h3>Templates</h3>
+                    <p class="timestamp">Added 1 hour ago</p>
+                </div>
+                
+                <div class="component-item">
+                    <i class="fas fa-tools"></i>
+                    <h3>helpers.js</h3>
+                    <p class="timestamp">Updated 3 minutes ago</p>
+                </div>
+                
+                <div class="component-item">
+                    <i class="fas fa-file-code"></i>
+                    <h3>index.js</h3>
+                    <p class="timestamp">Created 1 minute ago</p>
+                </div>
+            </div>
+        </div>
     </div>
+    
+    <footer>
+        <p>TEDGY-SMITH Label Generator &copy; 2023 | All rights reserved</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generateBtn');
+            const printBtn = document.getElementById('printBtn');
+            
+            generateBtn.addEventListener('click', generateLabel);
+            printBtn.addEventListener('click', printLabel);
+            
+            function generateLabel() {
+                const productName = document.getElementById('productName').value || 'Sample Product';
+                const productCode = document.getElementById('productCode').value || 'SP-001';
+                const price = document.getElementById('price').value || '19.99';
+                const manufactureDate = document.getElementById('manufactureDate').value || '2023-09-01';
+                const expiryDate = document.getElementById('expiryDate').value || '2024-09-01';
+                const description = document.getElementById('description').value || '';
+                
+                const preview = document.querySelector('.label-preview');
+                preview.innerHTML = `
+                    <div class="company-name">TEDGY-SMITH</div>
+                    <div class="barcode">${productCode.replace(/[^0-9]/g, '') || '123456789'}</div>
+                    <div class="product-name">${productName}</div>
+                    ${description ? `<div class="product-details">${description}</div>` : ''}
+                    <div class="product-details">Code: ${productCode}</div>
+                    <div class="product-details">Price: $${price}</div>
+                    <div class="product-details">Mfg: ${manufactureDate}</div>
+                    <div class="product-details">Exp: ${expiryDate}</div>
+                `;
+            }
+            
+            function printLabel() {
+                const printContent = document.querySelector('.label-preview').innerHTML;
+                const originalContent = document.body.innerHTML;
+                
+                document.body.innerHTML = `
+                    <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+                        <div style="transform: scale(1.5);">${printContent}</div>
+                    </div>
+                `;
+                
+                window.print();
+                document.body.innerHTML = originalContent;
+                location.reload();
+            }
+            
+            // Initialize with current date for manufacture date
+            const today = new Date();
+            const nextYear = new Date();
+            nextYear.setFullYear(today.getFullYear() + 1);
+            
+            document.getElementById('manufactureDate').valueAsDate = today;
+            document.getElementById('expiryDate').valueAsDate = nextYear;
+        });
+    </script>
 </body>
 </html>
