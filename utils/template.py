@@ -1,21 +1,15 @@
-# utils/template.py  (no lxml needed)
+# utils/template.py  (pure stdlib, no lxml)
 from __future__ import annotations
 from xml.etree import ElementTree as ET
-from io import BytesIO
 import base64
 
 SVG_NS = "http://www.w3.org/2000/svg"
 XLINK_NS = "http://www.w3.org/1999/xlink"
 
-# keep namespaces in output
 ET.register_namespace("", SVG_NS)
 ET.register_namespace("xlink", XLINK_NS)
 
 def load_svg(path_or_filelike) -> ET.ElementTree:
-    """
-    Accepts a filesystem path or a file-like (BytesIO).
-    Returns an ElementTree whose .getroot() is the <svg> element.
-    """
     if hasattr(path_or_filelike, "read"):
         data = path_or_filelike.read()
         if isinstance(data, bytes):
@@ -69,7 +63,6 @@ def set_text_multiline(root: ET.Element, element_id: str, value: str | None, max
     if "display" in node.attrib:
         del node.attrib["display"]
 
-    # clear any children
     for ch in list(node):
         node.remove(ch)
 
@@ -79,7 +72,7 @@ def set_text_multiline(root: ET.Element, element_id: str, value: str | None, max
         tspan = ET.Element(f"{{{SVG_NS}}}tspan")
         if x is not None:
             tspan.set("x", x)
-        tspan.set("dy", "0" if i == 0 else "4")  # tune line gap if needed
+        tspan.set("dy", "0" if i == 0 else "4")  # line gap tuneable
         tspan.text = line
         node.append(tspan)
 
