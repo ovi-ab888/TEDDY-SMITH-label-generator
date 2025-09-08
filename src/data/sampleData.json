@@ -1,1 +1,20 @@
-
+[
+  {
+    "styleName": "Summer Collection T-Shirt",
+    "colorRef": "BLUE-001",
+    "artSeason": "SS2023",
+    "styleRef": "ART-12345",
+    "size": "M",
+    "price": "59,99 €",
+    "barcode": "3607186681381"
+  },
+  {
+    "styleName": "Winter Jacket",
+    "colorRef": "BLACK-002",
+    "artSeason": "FW2023",
+    "styleRef": "ART-67890",
+    "size": "L",
+    "price": "129,99 €",
+    "barcode": "4609123456789"
+  }
+]
