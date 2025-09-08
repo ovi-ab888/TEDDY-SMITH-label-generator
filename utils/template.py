@@ -1,113 +1,108 @@
+# utils/template.py  (no lxml needed)
 from __future__ import annotations
-from lxml import etree
+from xml.etree import ElementTree as ET
 from io import BytesIO
 import base64
-from typing import Optional
 
 SVG_NS = "http://www.w3.org/2000/svg"
 XLINK_NS = "http://www.w3.org/1999/xlink"
-NSMAP = {"svg": SVG_NS, "xlink": XLINK_NS}
 
-def load_svg(path: str) -> etree._ElementTree:
-    return etree.parse(path)
+# keep namespaces in output
+ET.register_namespace("", SVG_NS)
+ET.register_namespace("xlink", XLINK_NS)
 
-def set_text(root, element_id: str, value: str | None, hide_if_empty: bool = True):
-    nodes = root.xpath(f'//*[@id="{element_id}"]')
-    if not nodes:
+def load_svg(path_or_filelike) -> ET.ElementTree:
+    """
+    Accepts a filesystem path or a file-like (BytesIO).
+    Returns an ElementTree whose .getroot() is the <svg> element.
+    """
+    if hasattr(path_or_filelike, "read"):
+        data = path_or_filelike.read()
+        if isinstance(data, bytes):
+            data = data.decode("utf-8")
+        root = ET.fromstring(data)
+        return ET.ElementTree(root)
+    return ET.parse(path_or_filelike)
+
+def _find_by_id(root: ET.Element, element_id: str) -> ET.Element | None:
+    for el in root.iter():
+        if el.attrib.get("id") == element_id:
+            return el
+    return None
+
+def set_text(root: ET.Element, element_id: str, value: str | None, hide_if_empty: bool = True):
+    node = _find_by_id(root, element_id)
+    if node is None:
         return
-    node = nodes[0]
     if (value is None or str(value).strip() == "") and hide_if_empty:
         node.attrib["display"] = "none"
         return
-    # ensure visible
     if "display" in node.attrib:
         del node.attrib["display"]
     node.text = str(value)
 
-def clear_children(root, group_id: str):
-    nodes = root.xpath(f'//*[@id="{group_id}"]')
-    if not nodes:
-        return
-    g = nodes[0]
-    for ch in list(g):
-        g.remove(ch)
-
-def inject_svg_image(root, group_id: str, svg_string: str, width_mm: float = 22.0, height_mm: float = 10.0):
-    """Embed an SVG barcode as <image> (base64) into a group slot."""
-    b64 = base64.b64encode(svg_string.encode("utf-8")).decode("ascii")
-    nodes = root.xpath(f'//*[@id="{group_id}"]')
-    if not nodes:
-        return
-    g = nodes[0]
-    image_el = etree.Element(f"{{{SVG_NS}}}image", {
-        f"{{{XLINK_NS}}}href": f"data:image/svg+xml;base64,{b64}",
-        "width": f"{width_mm}mm",
-        "height": f"{height_mm}mm",
-        "x": "0mm",
-        "y": "0mm",
-        "preserveAspectRatio": "xMidYMid meet",
-    })
-    g.append(image_el)
-
-def to_string(root) -> str:
-    return etree.tostring(root, encoding="utf-8").decode("utf-8")
-
 def wrap_text_simple(text: str, max_chars: int = 24) -> str:
-    """
-    A simple soft-wrap to insert newline (for later <tspan> handling if needed).
-    """
-    text = str(text or "")
+    text = str(text or "").strip()
     if len(text) <= max_chars:
         return text
     words = text.split()
-    lines = []
-    current = ""
+    lines, cur = [], ""
     for w in words:
-        if len((current + " " + w).strip()) <= max_chars:
-            current = (current + " " + w).strip()
+        nxt = (cur + " " + w).strip()
+        if len(nxt) <= max_chars:
+            cur = nxt
         else:
-            if current:
-                lines.append(current)
-            current = w
-    if current:
-        lines.append(current)
+            if cur:
+                lines.append(cur)
+            cur = w
+    if cur:
+        lines.append(cur)
     return "\n".join(lines)
 
-def set_text_multiline(root, element_id: str, value: str | None, max_chars: int = 24):
-    """
-    Replace the <text> contents with multiple <tspan> lines if needed.
-    Assumes the <text> has x/y and text-anchor already set in the template.
-    """
-    nodes = root.xpath(f'//*[@id="{element_id}"]')
-    if not nodes:
+def set_text_multiline(root: ET.Element, element_id: str, value: str | None, max_chars: int = 24):
+    node = _find_by_id(root, element_id)
+    if node is None:
         return
-    text_el = nodes[0]
     if value is None or str(value).strip() == "":
-        text_el.attrib["display"] = "none"
+        node.attrib["display"] = "none"
         return
+    if "display" in node.attrib:
+        del node.attrib["display"]
 
-    if "display" in text_el.attrib:
-        del text_el.attrib["display"]
+    # clear any children
+    for ch in list(node):
+        node.remove(ch)
 
-    # clear existing children
-    for ch in list(text_el):
-        text_el.remove(ch)
-
-    wrapped = wrap_text_simple(str(value), max_chars=max_chars).split("\n")
-    # read y from attribute; if missing, default dy increments
-    y = float(text_el.attrib.get("y", "0"))
-    x = text_el.attrib.get("x", None)
-    dy_first = 0
-    dy_next = 4 # approximate line gap (in SVG user units; template uses mm viewBox -> tune if needed)
-
+    wrapped = wrap_text_simple(value, max_chars=max_chars).split("\n")
+    x = node.attrib.get("x")
     for i, line in enumerate(wrapped):
-        tspan = etree.Element(f"{{{SVG_NS}}}tspan")
+        tspan = ET.Element(f"{{{SVG_NS}}}tspan")
         if x is not None:
-            tspan.attrib["x"] = x
-        if i == 0:
-            tspan.attrib["dy"] = str(dy_first)
-        else:
-            tspan.attrib["dy"] = str(dy_next)
+            tspan.set("x", x)
+        tspan.set("dy", "0" if i == 0 else "4")  # tune line gap if needed
         tspan.text = line
-        text_el.append(tspan)
+        node.append(tspan)
 
+def clear_children(root: ET.Element, group_id: str):
+    g = _find_by_id(root, group_id)
+    if g is None:
+        return
+    for ch in list(g):
+        g.remove(ch)
+
+def inject_svg_image(root: ET.Element, group_id: str, svg_string: str, width_mm: float = 22.0, height_mm: float = 10.0):
+    g = _find_by_id(root, group_id)
+    if g is None:
+        return
+    b64 = base64.b64encode(svg_string.encode("utf-8")).decode("ascii")
+    img = ET.Element(f"{{{SVG_NS}}}image")
+    img.set(f"{{{XLINK_NS}}}href", f"data:image/svg+xml;base64,{b64}")
+    img.set("width", f"{width_mm}mm")
+    img.set("height", f"{height_mm}mm")
+    img.set("x", "0mm")
+    img.set("y", "0mm")
+    img.set("preserveAspectRatio", "xMidYMid meet")
+    g.append(img)
+
+def to_string(root: ET.Element) -> str:
+    return ET.tostring(root, encoding="unicode")
