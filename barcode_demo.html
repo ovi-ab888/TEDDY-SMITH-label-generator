@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <title>TEDDY-SMITH EAN-13 Barcode Demo</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: transparent;
+      text-align: center;
+      margin: 0;
+      padding: 10px;
+    }
+    h2 {
+      margin-top: 0.2rem;
+      font-size: 1.1rem;
+      color: #333;
+    }
+    #barcodeContainer {
+      margin-top: 15px;
+    }
+    input {
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 180px;
+      text-align: center;
+      margin-right: 6px;
+    }
+    button {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: #0066cc;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #004c99;
+    }
+  </style>
+
+  <!-- JsBarcode লাইব্রেরি -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+  <!-- তোমার কাস্টম EAN-13 ডিজাইন লজিক -->
+  <script src="barcode.js"></script>
+</head>
+<body>
+  <h2>🧾 TEDDY-SMITH EAN-13 Barcode Preview</h2>
+
+  <div>
+    <input type="text" id="codeInput" placeholder="Enter 13-digit EAN-13" maxlength="13" />
+    <button onclick="makeBarcode()">Generate</button>
+  </div>
+
+  <div id="barcodeContainer">
+    <svg id="barcodeSVG"></svg>
+  </div>
+
+  <script>
+    function makeBarcode() {
+      const code = document.getElementById("codeInput").value.trim();
+      const svg = document.getElementById("barcodeSVG");
+      svg.innerHTML = ""; // clear previous
+
+      if (!/^[0-9]{13}$/.test(code)) {
+        alert("⚠️ Please enter a valid 13-digit EAN-13 number!");
+        return;
+      }
+
+      // Render the barcode
+      try {
+        JsBarcode("#barcodeSVG", code, {
+          format: "EAN13",
+          lineColor: "#000000",
+          background: "transparent",
+          displayValue: true,
+          fontSize: 16,
+          width: 2,
+          height: 100,
+          margin: 0
+        });
+      } catch (e) {
+        alert("Error generating barcode: " + e.message);
+      }
+    }
+
+    // Demo barcode auto-render
+    window.onload = () => {
+      document.getElementById("codeInput").value = "5901234123457";
+      makeBarcode();
+    };
+  </script>
+</body>
+</html>
